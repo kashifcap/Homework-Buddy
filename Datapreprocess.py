@@ -5,6 +5,15 @@ import numpy as np
 import xml.etree.cElementTree as ElementTree
 
 
+def separate(pts):
+    seperated_points = []
+    for i in range(0, len(pts) - 1):
+        # Filtering the points at a distance greater than 600
+        if np.sqrt(np.sum(np.square(pts[i] - pts[i+1]))) > 600:
+            seperated_points += [i + 1]
+    return [pts[b:e] for b, e in zip([0] + seperated_points, seperated_points + [len(pts)])]
+
+
 def remove_middle(pts):
     to_remove = set()
     for i in range(1, len(pts) - 1):
@@ -56,6 +65,82 @@ def main():
                     if len(pts) == 0:
                         continue
 
+                    # Filtering stroke points at a distance
+
+                    separated_points = seperate(pts)
+                    for pss in seperated_points:
+                        if len(seperated_points) > 1 and len(pss) == 1:
+                            continue
+                        pss[-1, 2] = 1
+
+                        xmax, ymax = max(pss, key=lambda x: x[0])[0], max(pss, key=lambda x: x[1])[1]
+                        xmin, ymin = min(pss, key=lambda x: x[0])[0], min(pss, key=lambda x: x[1])[1]
+
+                        # Adding the strokes points
+                        strokes += [pss]
+                            mid_points += [[(xmax + xmin) / 2., (ymax + ymin) / 2.]]
+
+
+                print(f"Processing file : {f_name}")
+
+                distances = [-(abs(p1[0] - p2[0]) + abs(p1[1] - p2[1]))
+                             for p1, p2 in zip(mid_points, mid_points[1:])]
+
+                splits = sorted(np.argsort(distances)[:len(texts) - 1] + 1)
+
+                lines = []
+
+                for b, e in zip([0] + splits, splits + [len(strokes)]):
+                    lines += [[p for pts in strokes[b:e] for p in pts]]
+
+                # Adding the characterset
+                charset |= set(''.join(texts))
+
+                # data is in form of tuples for text and corresponding line strokes
+                data += [(texts, lines)]
+
+
+
+    translation = {'<NULL>': 0}
+    for character in ''.join(sorted(charset)):
+        translation[character] = len(translation)
+
+
+    dataset = []
+    labels = []
+
+
+    # converting the required data in numpy arrays and adding the required lables from translation
+    for texts, lines in data:
+        for text, line in zip(texts, lines):
+            line = np.array(line, dtype=np.float32)
+            line[:, 0] = line[:, 0] - np.min(line[:, 0]) # Storing the min point for the starting of each text  
+            line[:, 1] = line[:, 1] - np.mean(line[:, 1])
+
+            dataset += [line]
+
+            # Mapping the translations to the texts as labels
+            labels += list(map(lambda x: translation[x], text))
+
+    whole_data = np.concatenate(dataset, axis=0)
+    std_y = np.std(whole_data[:, 1])
+    norm_data = []
+    for line in dataset:
+        line[:, :2] /= std_y
+        norm_data += [line]
+    dataset = norm_data
+
+
+    try:
+        os.makedirs('data') # Trying to make 'data' folder if it doesn't already exists
+    except FileExistsError:
+        pass
+
+    # Saving our processed data into the 'data' folder 
+    np.save(os.path.join('data', 'dataset'), np.array(dataset))
+    np.save(os.path.join('data', 'labels'), np.array(labels))
+    with open(os.path.join('data', 'translation.pkl'), 'wb') as file:
+        pickle.dump(translation, file)
 
 
 if __name__ == "__main__":
