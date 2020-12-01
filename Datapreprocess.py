@@ -5,7 +5,7 @@ import numpy as np
 import xml.etree.cElementTree as ElementTree
 
 
-def separate(pts):
+def seperate(pts):
     seperated_points = []
     for i in range(0, len(pts) - 1):
         # Filtering the points at a distance greater than 600
@@ -18,7 +18,8 @@ def remove_middle(pts):
     to_remove = set()
     for i in range(1, len(pts) - 1):
         p1, p2, p3 = pts[i - 1: i + 2, :2]
-        dist = np.sqrt(np.sum(np.square(p1 - p2))) + np.sqrt(np.sum(np.square(p2 - p3)))
+        dist = np.sqrt(np.sum(np.square(p1 - p2))) + \
+            np.sqrt(np.sum(np.square(p2 - p3)))
 
         # Clearing the middle point between two points having distance greater than 1500
         if dist > 1500:
@@ -32,32 +33,36 @@ def remove_middle(pts):
 
 
 def main():
-	data = []
-	charset = set()
+    data = []
+    charset = set()
 
-	# Reading the xml files in our Dataset folder
-	for root, directories, files in os.walk(./Dataset):
-		for file in files:
-			f_name, f_ext = os.splittext(file) # Splitting the file in its name and its extension
-			if f_ext == '.xml': # Checking for xml extension
+    # Reading the xml files in our Dataset folder
+    for root, _, files in os.walk('./Dataset'):
+        for file in files:
+            # Splitting the file in its name and its extension
+            f_name, f_ext = os.path.splitext(file)
+            if f_ext == '.xml':  # Checking for xml extension
 
-				# Parsing the xml file
-				xml = ElementTree.parse(os.path.join(root, file)).getroot()
-				transcription = xml.findall('Transcription')
+                # Parsing the xml file
+                xml = ElementTree.parse(os.path.join(root, file)).getroot()
+                transcription = xml.findall('Transcription')
 
-				# Escaping the data which doesn't have Transcription node
-				if not transcription:
-					continue
+                # Escaping the data which doesn't have Transcription node
+                if not transcription:
+                    continue
 
-				# Getting the texts for xml file and its stokes points  
-				texts = [html.unescape(s.get('text')) for s in transcription[0].findall('TextLine')]
-                points = [s.findall('Point') for s in xml.findall('StrokeSet')[0].findall('Stroke')]
+                # Getting the texts for xml file and its stokes points
+                texts = [html.unescape(s.get('text'))
+                         for s in transcription[0].findall('TextLine')]
+                stroke_set = xml.findall('StrokeSet')[0].findall('Stroke')
 
+                points = [s.findall('Point') for s in stroke_set]
                 strokes = []
                 mid_points = []
 
                 for point in points:
-                    pts = np.array([[int(p.get('x')), int(p.get('y')), 0] for p in point])
+                    pts = np.array(
+                        [[int(p.get('x')), int(p.get('y')), 0] for p in point])
                     pts[-1, 2] = 1
 
                     # Removing the middle points between two separated points
@@ -67,19 +72,21 @@ def main():
 
                     # Filtering stroke points at a distance
 
-                    separated_points = seperate(pts)
+                    seperated_points = seperate(pts)
                     for pss in seperated_points:
                         if len(seperated_points) > 1 and len(pss) == 1:
                             continue
                         pss[-1, 2] = 1
 
-                        xmax, ymax = max(pss, key=lambda x: x[0])[0], max(pss, key=lambda x: x[1])[1]
-                        xmin, ymin = min(pss, key=lambda x: x[0])[0], min(pss, key=lambda x: x[1])[1]
+                        xmax, ymax = max(pss, key=lambda x: x[0])[
+                            0], max(pss, key=lambda x: x[1])[1]
+                        xmin, ymin = min(pss, key=lambda x: x[0])[
+                            0], min(pss, key=lambda x: x[1])[1]
 
                         # Adding the strokes points
                         strokes += [pss]
-                            mid_points += [[(xmax + xmin) / 2., (ymax + ymin) / 2.]]
-
+                        mid_points += [[(xmax + xmin) / 2.,
+                                        (ymax + ymin) / 2.]]
 
                 print(f"Processing file : {f_name}")
 
@@ -99,22 +106,19 @@ def main():
                 # data is in form of tuples for text and corresponding line strokes
                 data += [(texts, lines)]
 
-
-
     translation = {'<NULL>': 0}
     for character in ''.join(sorted(charset)):
         translation[character] = len(translation)
 
-
     dataset = []
     labels = []
-
 
     # converting the required data in numpy arrays and adding the required lables from translation
     for texts, lines in data:
         for text, line in zip(texts, lines):
             line = np.array(line, dtype=np.float32)
-            line[:, 0] = line[:, 0] - np.min(line[:, 0]) # Storing the min point for the starting of each text  
+            # Storing the min point for the starting of each text
+            line[:, 0] = line[:, 0] - np.min(line[:, 0])
             line[:, 1] = line[:, 1] - np.mean(line[:, 1])
 
             dataset += [line]
@@ -130,13 +134,13 @@ def main():
         norm_data += [line]
     dataset = norm_data
 
-
     try:
-        os.makedirs('data') # Trying to make 'data' folder if it doesn't already exists
+        # Trying to make 'data' folder if it doesn't already exists
+        os.makedirs('data')
     except FileExistsError:
         pass
 
-    # Saving our processed data into the 'data' folder 
+    # Saving our processed data into the 'data' folder
     np.save(os.path.join('data', 'dataset'), np.array(dataset))
     np.save(os.path.join('data', 'labels'), np.array(labels))
     with open(os.path.join('data', 'translation.pkl'), 'wb') as file:
@@ -144,4 +148,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+    main()
