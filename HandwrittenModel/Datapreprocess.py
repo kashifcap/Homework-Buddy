@@ -37,7 +37,7 @@ def main():
     charset = set()
 
     # Reading the xml files in our Dataset folder
-    for root, _, files in os.walk('./Dataset'):
+    for root, _, files in os.walk('./HandwrittenModel/Dataset'):
         for file in files:
             # Splitting the file in its name and its extension
             f_name, f_ext = os.path.splitext(file)
@@ -136,14 +136,14 @@ def main():
 
     try:
         # Trying to make 'data' folder if it doesn't already exists
-        os.makedirs('data')
+        os.makedirs('HandwrittenModel/data')
     except FileExistsError:
         pass
 
     # Saving our processed data into the 'data' folder
-    np.save(os.path.join('data', 'dataset'), np.array(dataset))
-    np.save(os.path.join('data', 'labels'), np.array(labels))
-    with open(os.path.join('data', 'translation.pkl'), 'wb') as file:
+    np.save(os.path.join('HandwrittenModel/data', 'dataset'), np.array(dataset))
+    np.save(os.path.join('HandwrittenModel/data', 'labels'), np.array(labels))
+    with open(os.path.join('HandwrittenModel/data', 'translation.pkl'), 'wb') as file:
         pickle.dump(translation, file)
 
 

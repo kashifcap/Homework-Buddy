@@ -9,7 +9,7 @@ def next_experiment_path():
     """
 
     i = 0
-    path = os.path.join('summary', 'experiment-{}')
+    path = os.path.join('HandwrittenModel/summary', 'experiment-{}')
     while os.path.exists(path.format(i)):
         i += 1
     path = path.format(i)
