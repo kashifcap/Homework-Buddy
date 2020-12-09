@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homework Buddy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+</head>
+<body>
+    <header class="container">
+       
+        <div class="title">
+           
+            Homework Buddy
+            <span class="ieee">(A part of I.E.E.E Megaproject)</span>
+            </div>
+            <p class="instruction-section">
+                
+                <span class="intro-title">Instructions</span>
+                
+                Welcome to Homework Buddy. We make your homework easy. There are two ways to get your homework done :-<br>
+                    1.Type your homework in the text generate area and click on 'generate' button to get your handrwritten pdf file.<br>
+                    2.Upload a text file in file generate area and click on 'generate' button to get your handrwritten pdf file.
+            </p>
+            
+    </header>
+    <div class="container forms-container">
+    <div class="text-form">
+        <h1 class="text-generate">Text Generate</h1>
+        <form action="" method="POST">
+            <div class="textbox">
+                <textarea name="text" id="" placeholder="Type here.." style="width: 100%; height: 90%;"></textarea>
+            </div>
+            <div>
+                <input type="submit" value="Generate" id="submit-button">
+            </div>
+        </form>
+    </div>
+    <div class="file-form">
+        <h1 class="file-generate">File Generate</h1>
+        <form action="" method="POST" enctype="multipart/form-data">
+            <div class="file-box">
+                <input type="file" name="file" id="">
+            </div>
+            <div>
+                <input type="submit" value="Generate" id="submit-button">
+            </div>
+        </form>
+    </div>
+    </div>
+    <footer class="container footer">
+        Created by team <span class="team-name">Hugs For Bugs</span>
+        <a href="https://github.com/its-me-pratik/Homework-Buddy" class="gitimg" target="_blank"><img src="{{ url_for('static', filename='images/git.png') }}" alt="Github"></a>
+    </footer>
+</body>
+</html>
