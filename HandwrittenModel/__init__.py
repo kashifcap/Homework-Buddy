@@ -12,8 +12,10 @@ import shutil
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', dest='model_path', type=str,
                     default=os.path.join('HandwrittenModel/pretrained', 'model-29'))
-parser.add_argument('--style', dest='style', type=int, default=None)
-parser.add_argument('--bias', dest='bias', type=float, default=1.)
+#parser.add_argument('--style', dest='style', type=int, default=None)
+styl = 3
+#parser.add_argument('--bias', dest='bias', type=float, default=1.)
+bia = 30
 parser.add_argument('--force', dest='force',
                     action='store_true', default=False)
 parser.add_argument('--noinfo', dest='info',
@@ -61,7 +63,7 @@ def sample_text(sess, args_text, translation, style=None):
 
     # Prime the model with the author style if requested
     prime_len, style_len = 0, 0
-    if style is not None:
+    if styl is not None:
         # Priming consist of joining to a real pen-position and character sequences the synthetic sequence to generate
         #   and set the synthetic pen-position to a null vector (the positions are sampled from the MDN)
         style_coords, style_text = style
@@ -96,7 +98,7 @@ def sample_text(sess, args_text, translation, style=None):
                                                   feed_dict={
                                                   vs.coordinates: coord[None, None, ...],
                                                   vs.sequence: sequence_prime if is_priming else sequence,
-                                                  vs.bias: args.bias
+                                                  vs.bias: bia
                                                   })
 
         if is_priming:
@@ -157,15 +159,15 @@ def main():
                 args.model_path + '.meta')
             saver.restore(sess, args.model_path)
             style = None
-            if args.style is not None:
+            if styl is not None:
                 style = None
                 with open(os.path.join('HandwrittenModel/data', 'styles.pkl'), 'rb') as file:
                     styles = pickle.load(file)
 
-                if args.style > len(styles[0]):
+                if styl > len(styles[0]):
                     raise ValueError('Requested style is not in style list')
 
-                style = [styles[0][args.style], styles[1][args.style]]
+                style = [styles[0][styl], styles[1][styl]]
 
             phi_data, window_data, kappa_data, stroke_data, coords = sample_text(
                 sess, st, translation, style)
@@ -191,6 +193,8 @@ def main():
                 plt.axis("off")
 
                 coun = coun + 1
+                if not os.path.exists("HandwrittenModel/generated"):
+                    os.mkdir("HandwrittenModel/generated")
                 fig.savefig("HandwrittenModel/generated/generated_%s.png" %
                             coun, transparent=True, pad_inches=0)
 
